@@ -12,7 +12,6 @@ from .exceptions import (
     WalletLocked
 )
 
-
 log = logging.getLogger(__name__)
 
 
@@ -90,32 +89,31 @@ class MasterPassword(object):
         """
         self.password = password
         if self.config_key in self.config and self.config[self.config_key]:
-            self.decryptEncryptedMaster()
+            self.decrypt_encrypted_master()
         else:
-            self.newMaster(password)
-            self.saveEncrytpedMaster()
+            self.new_master(password)
 
-    def decryptEncryptedMaster(self):
+    def decrypt_encrypted_master(self):
         """ Decrypt the encrypted masterkey
         """
         aes = AESCipher(self.password)
         checksum, encrypted_master = self.config[self.config_key].split("$")
         try:
             decrypted_master = aes.decrypt(encrypted_master)
-        except:
-            self.raiseWrongMasterPasswordException()
-        if checksum != self.deriveChecksum(decrypted_master):
-            self.raiseWrongMasterPasswordException()
-        self.decrypted_master = decrypted_master
+            if checksum != self.derive_checksum(decrypted_master):
+                self.raise_wrong_master_password_exception()
+            self.decrypted_master = decrypted_master
+        except Exception:
+            self.raise_wrong_master_password_exception()
 
-    def raiseWrongMasterPasswordException(self):
+    def raise_wrong_master_password_exception(self):
         self.password = None
         raise WrongMasterPasswordException
 
-    def saveEncrytpedMaster(self):
-        self.config[self.config_key] = self.getEncryptedMaster()
+    def save_encrypted_master(self):
+        self.config[self.config_key] = self.get_encrypted_master()
 
-    def newMaster(self, password):
+    def new_master(self, password):
         """ Generate a new random masterkey, encrypt it with the password and
             store it in the store.
 
@@ -130,10 +128,11 @@ class MasterPassword(object):
 
         # Encrypt and save master
         self.password = password
-        self.saveEncrytpedMaster()
+        self.save_encrypted_master()
         return self.masterkey
 
-    def deriveChecksum(self, s):
+    @staticmethod
+    def derive_checksum(s):
         """ Derive the checksum
 
             :param str s: Random string for which to derive the checksum
@@ -141,7 +140,7 @@ class MasterPassword(object):
         checksum = hashlib.sha256(bytes(s, "ascii")).hexdigest()
         return checksum[:4]
 
-    def getEncryptedMaster(self):
+    def get_encrypted_master(self):
         """ Obtain the encrypted masterkey
 
             .. note:: The encrypted masterkey is checksummed, so that we can
@@ -152,17 +151,17 @@ class MasterPassword(object):
             raise WalletLocked
         aes = AESCipher(self.password)
         return "{}${}".format(
-            self.deriveChecksum(self.masterkey),
+            self.derive_checksum(self.masterkey),
             aes.encrypt(self.masterkey)
         )
 
-    def changePassword(self, newpassword):
+    def change_password(self, new_password):
         """ Change the password that allows to decrypt the master key
         """
         if not self.unlocked():
             raise WalletLocked
-        self.password = newpassword
-        self.saveEncrytpedMaster()
+        self.password = new_password
+        self.save_encrypted_master()
 
     def decrypt(self, wif):
         """ Decrypt the content according to BIP38
@@ -187,3 +186,26 @@ class MasterPassword(object):
             str(wif),
             self.masterkey
         ), "encwif")
+
+    # Legacy
+
+    def changePassword(self, new_password):
+        return self.change_password(new_password)
+
+    def getEncryptedMaster(self):
+        return self.get_encrypted_master()
+
+    def deriveChecksum(self, s):
+        return self.derive_checksum(s)
+
+    def newMaster(self, password):
+        return self.new_master(password)
+
+    def saveEncrytpedMaster(self):
+        return self.save_encrypted_master()
+
+    def raiseWrongMasterPasswordException(self):
+        return self.raise_wrong_master_password_exception()
+
+    def decryptEncryptedMaster(self):
+        return self.decrypt_encrypted_master()

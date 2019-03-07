@@ -146,10 +146,10 @@ class Testcases(unittest.TestCase):
             with self.assertRaises(WalletLocked):
                 keys.encrypt("6PRViepa2zaXXGEQTYUsoLM1KudLmNBB1t812jtdKx1TEhQtvxvmtEm6Yh")
             with self.assertRaises(WalletLocked):
-                keys.getEncryptedMaster()
+                keys.get_encrypted_master()
 
             # set the first MasterPassword here!
-            keys.newMaster(password)
+            keys.new_master(password)
             keys.lock()
             keys.unlock(password)
             assert keys.unlocked()
@@ -211,19 +211,19 @@ class Testcases(unittest.TestCase):
         config = storage.InRamConfigurationStore()
         keys = storage.InRamEncryptedKeyStore(config=config)
         self.assertFalse(keys.has_masterpassword())
-        master = keys.newMaster(password)
+        master = keys.new_master(password)
         self.assertEqual(
             len(master),
             len("66eaab244153031e8172e6ffed321"
                 "7288515ddb63646bbefa981a654bdf25b9f")
         )
         with self.assertRaises(Exception):
-            keys.newMaster(master)
+            keys.new_master(master)
 
         keys.lock()
 
         with self.assertRaises(Exception):
-            keys.changePassword("foobar")
+            keys.change_password("foobar")
 
         keys.unlock(password)
         self.assertEqual(
@@ -232,7 +232,7 @@ class Testcases(unittest.TestCase):
         )
 
         new_pass = "new_secret_password"
-        keys.changePassword(new_pass)
+        keys.change_password(new_pass)
         keys.lock()
         keys.unlock(new_pass)
         self.assertEqual(
@@ -243,7 +243,7 @@ class Testcases(unittest.TestCase):
     def test_wrongmastermass(self):
         config = storage.InRamConfigurationStore()
         keys = storage.InRamEncryptedKeyStore(config=config)
-        keys.newMaster("foobar")
+        keys.new_master("foobar")
         keys.lock()
         with self.assertRaises(WrongMasterPasswordException):
             keys.unlock("foobar2")
@@ -257,14 +257,14 @@ class Testcases(unittest.TestCase):
         keys.unlock("foobar")
         keys.password = "FOoo"
         with self.assertRaises(Exception):
-            keys.decryptEncryptedMaster()
+            keys.decrypt_encrypted_master()
         keys.lock()
 
         with self.assertRaises(WrongMasterPasswordException):
             keys.unlock("foobar2")
 
         with self.assertRaises(Exception):
-            keys.getEncryptedMaster()
+            keys.get_encrypted_master()
 
         self.assertFalse(keys.unlocked())
 

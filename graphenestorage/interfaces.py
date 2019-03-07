@@ -1,5 +1,4 @@
 class StoreInterface(dict):
-
     """ The store interface is the most general store that we can have.
 
         It inherits dict and thus behaves like a dictionary. As such any
@@ -32,13 +31,10 @@ class StoreInterface(dict):
     defaults = {}
 
     @classmethod
-    def setdefault(cls, key, value):
+    def setdefault(cls, key, value, *args, **kwargs):
         """ Allows to define default values
         """
         cls.defaults[key] = value
-
-    def __init__(self, *args, **kwargs):
-        pass
 
     def __setitem__(self, key, value):
         """ Sets an item in the store
@@ -103,6 +99,7 @@ class KeyInterface(StoreInterface):
             :class:`graphenestorage.interfaces.StoreInterface` and defines
             additional key-specific methods.
     """
+
     def is_encrypted(self):
         """ Returns True/False to indicate required use of unlock
         """
@@ -140,6 +137,11 @@ class KeyInterface(StoreInterface):
         """
         raise NotImplementedError
 
+    def wipe(self):
+        """ Wipe the store
+        """
+        raise NotImplementedError
+
 
 class EncryptedKeyInterface(KeyInterface):
     """ The EncryptedKeyInterface extends KeyInterface to work with encrypted
@@ -168,6 +170,40 @@ class EncryptedKeyInterface(KeyInterface):
         """
         raise NotImplementedError
 
+    def getPublicKeys(self):
+        """ Returns the public keys stored in the database
+        """
+        raise NotImplementedError
+
+    def getPrivateKeyForPublicKey(self, pub):
+        """ Returns the (possibly encrypted) private key that
+            corresponds to a public key
+
+           :param str pub: Public key
+
+           The encryption scheme is BIP38
+        """
+        raise NotImplementedError
+
+    def add(self, wif, pub=None):
+        """ Add a new public/private key pair (correspondence has to be
+            checked elsewhere!)
+
+           :param str pub: Public key
+           :param str wif: Private key
+        """
+        raise NotImplementedError
+
+    def delete(self, key):
+        """ Delete a key from the store
+        """
+        raise NotImplementedError
+
+    def wipe(self):
+        """ Wipe the store
+        """
+        raise NotImplementedError
+
 
 class ConfigInterface(StoreInterface):
     """ The BaseKeyStore defines the interface for key storage
@@ -176,4 +212,13 @@ class ConfigInterface(StoreInterface):
             :class:`graphenestorage.interfaces.StoreInterface` and defines
             **no** additional configuration-specific methods.
     """
-    pass
+
+    def delete(self, key):
+        """ Delete a key from the store
+        """
+        raise NotImplementedError
+
+    def wipe(self):
+        """ Wipe the store
+        """
+        raise NotImplementedError

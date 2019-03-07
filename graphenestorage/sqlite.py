@@ -7,12 +7,12 @@ from appdirs import user_data_dir
 from .interfaces import StoreInterface
 
 log = logging.getLogger(__name__)
-timeformat = "%Y%m%d-%H%M%S"
+time_format = "%Y%m%d-%H%M%S"
 
 
-class SQLiteFile():
+class SQLiteFile:
     """ This class ensures that the user's data is stored in its OS
-        preotected user directory:
+        protected user directory:
 
         **OSX:**
 
@@ -44,12 +44,12 @@ class SQLiteFile():
             user_data_dir(appname, appauthor))
 
         if "profile" in kwargs:
-            self.storageDatabase = "{}.sqlite".format(kwargs["profile"])
+            self.storage_database = "{}.sqlite".format(kwargs["profile"])
         else:
-            self.storageDatabase = "{}.sqlite".format(appname)
+            self.storage_database = "{}.sqlite".format(appname)
 
-        self.sqlDataBaseFile = os.path.join(
-            data_dir, self.storageDatabase)
+        self.sql_data_base_file = os.path.join(
+            data_dir, self.storage_database)
 
         """ Ensure that the directory in which the data is stored
             exists
@@ -88,9 +88,9 @@ class SQLiteStore(SQLiteFile, StoreInterface):
         SQLiteFile.__init__(self, *args, **kwargs)
         StoreInterface.__init__(self, *args, **kwargs)
         if (
-            self.__tablename__ is None or
-            self.__key__ is None or
-            self.__value__ is None
+                self.__tablename__ is None or
+                self.__key__ is None or
+                self.__value__ is None
         ):
             raise ValueError(
                 "Values missing for tablename, key, or value!"
@@ -98,7 +98,7 @@ class SQLiteStore(SQLiteFile, StoreInterface):
         if not self.exists():  # pragma: no cover
             self.create()
 
-    def _haveKey(self, key):
+    def _have_key(self, key):
         """ Is the key `key` available?
         """
         query = (
@@ -107,7 +107,7 @@ class SQLiteStore(SQLiteFile, StoreInterface):
                 self.__tablename__,
                 self.__key__
             ), (key,))
-        connection = sqlite3.connect(self.sqlDataBaseFile)
+        connection = sqlite3.connect(self.sql_data_base_file)
         cursor = connection.cursor()
         cursor.execute(*query)
         return True if cursor.fetchone() else False
@@ -118,7 +118,7 @@ class SQLiteStore(SQLiteFile, StoreInterface):
             :param str key: Key
             :param str value: Value
         """
-        if self._haveKey(key):
+        if self._have_key(key):
             query = (
                 "UPDATE {} SET {}=? WHERE {}=?".format(
                     self.__tablename__,
@@ -132,7 +132,7 @@ class SQLiteStore(SQLiteFile, StoreInterface):
                     self.__key__,
                     self.__value__,
                 ), (key, value))
-        connection = sqlite3.connect(self.sqlDataBaseFile)
+        connection = sqlite3.connect(self.sql_data_base_file)
         cursor = connection.cursor()
         cursor.execute(*query)
         connection.commit()
@@ -140,7 +140,7 @@ class SQLiteStore(SQLiteFile, StoreInterface):
     def __getitem__(self, key):
         """ Gets an item from the store as if it was a dictionary
 
-            :param str value: Value
+            :param str key: Value
         """
         query = (
             "SELECT {} FROM {} WHERE {}=?".format(
@@ -148,7 +148,7 @@ class SQLiteStore(SQLiteFile, StoreInterface):
                 self.__tablename__,
                 self.__key__
             ), (key,))
-        connection = sqlite3.connect(self.sqlDataBaseFile)
+        connection = sqlite3.connect(self.sql_data_base_file)
         cursor = connection.cursor()
         cursor.execute(*query)
         result = cursor.fetchone()
@@ -169,16 +169,16 @@ class SQLiteStore(SQLiteFile, StoreInterface):
         query = ("SELECT {} from {}".format(
             self.__key__,
             self.__tablename__))
-        connection = sqlite3.connect(self.sqlDataBaseFile)
+        connection = sqlite3.connect(self.sql_data_base_file)
         cursor = connection.cursor()
         cursor.execute(query)
         return [x[0] for x in cursor.fetchall()]
 
     def __len__(self):
-        """ return lenght of store
+        """ return length of store
         """
         query = ("SELECT id from {}".format(self.__tablename__))
-        connection = sqlite3.connect(self.sqlDataBaseFile)
+        connection = sqlite3.connect(self.sql_data_base_file)
         cursor = connection.cursor()
         cursor.execute(query)
         return len(cursor.fetchall())
@@ -186,11 +186,11 @@ class SQLiteStore(SQLiteFile, StoreInterface):
     def __contains__(self, key):
         """ Tests if a key is contained in the store.
 
-            May test againsts self.defaults
+            May test against self.defaults
 
-            :param str value: Value
+            :param str key: Value
         """
-        if self._haveKey(key) or key in self.defaults:
+        if self._have_key(key) or key in self.defaults:
             return True
         else:
             return False
@@ -202,7 +202,7 @@ class SQLiteStore(SQLiteFile, StoreInterface):
             self.__key__,
             self.__value__,
             self.__tablename__))
-        connection = sqlite3.connect(self.sqlDataBaseFile)
+        connection = sqlite3.connect(self.sql_data_base_file)
         cursor = connection.cursor()
         cursor.execute(query)
         r = []
@@ -213,7 +213,7 @@ class SQLiteStore(SQLiteFile, StoreInterface):
     def get(self, key, default=None):
         """ Return the key if exists or a default value
 
-            :param str value: Value
+            :param str key: Value
             :param str default: Default value if key not present
         """
         if key in self:
@@ -225,14 +225,14 @@ class SQLiteStore(SQLiteFile, StoreInterface):
     def delete(self, key):
         """ Delete a key from the store
 
-            :param str value: Value
+            :param str key: Value
         """
         query = (
             "DELETE FROM {} WHERE {}=?".format(
                 self.__tablename__,
                 self.__key__
             ), (key,))
-        connection = sqlite3.connect(self.sqlDataBaseFile)
+        connection = sqlite3.connect(self.sql_data_base_file)
         cursor = connection.cursor()
         cursor.execute(*query)
         connection.commit()
@@ -241,7 +241,7 @@ class SQLiteStore(SQLiteFile, StoreInterface):
         """ Wipe the store
         """
         query = "DELETE FROM {}".format(self.__tablename__)
-        connection = sqlite3.connect(self.sqlDataBaseFile)
+        connection = sqlite3.connect(self.sql_data_base_file)
         cursor = connection.cursor()
         cursor.execute(query)
         connection.commit()
@@ -251,8 +251,8 @@ class SQLiteStore(SQLiteFile, StoreInterface):
         """
         query = ("SELECT name FROM sqlite_master " +
                  "WHERE type='table' AND name=?",
-                 (self.__tablename__, ))
-        connection = sqlite3.connect(self.sqlDataBaseFile)
+                 (self.__tablename__,))
+        connection = sqlite3.connect(self.sql_data_base_file)
         cursor = connection.cursor()
         cursor.execute(*query)
         return True if cursor.fetchone() else False
@@ -272,7 +272,12 @@ class SQLiteStore(SQLiteFile, StoreInterface):
             self.__key__,
             self.__value__
         )
-        connection = sqlite3.connect(self.sqlDataBaseFile)
+        connection = sqlite3.connect(self.sql_data_base_file)
         cursor = connection.cursor()
         cursor.execute(query)
         connection.commit()
+
+    # Legacy
+
+    def _haveKey(self, key):
+        return self._have_key(key)
